@@ -1,15 +1,16 @@
-/**
-* @Method: Console log
-* @Param: {string} title - Console group title
-* @Param: {any} str - anything to log
-* @Return: {boolean} - is success or not
-*/
-export function log(title: string, str: any): Boolean {
-  console.group(title);
+export * from './lib/inspector';
 
-  console.log(str);
-  
-  console.groupEnd();
+import { Inspector } from './lib/inspector';
 
-  return true;
+
+async function main() {
+  const obj = new Inspector(
+    "https://api.mainnet-beta.solana.com",
+    "4KAFf8ZpNCn1SWLZFo5tbeZsKpVemsobbVZdERWxRvd2"
+  );
+
+  await obj.pushSearchTable('R&D', 'DuhmSSKFmg7X29JgvKFxaR6bUfo2dtrontFz7H956m15');
+  console.log(obj.searchTable);
 }
+
+main();

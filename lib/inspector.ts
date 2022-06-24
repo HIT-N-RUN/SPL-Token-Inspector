@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import Excel from 'exceljs';
 
 const web3 = require('@solana/web3.js');
 
@@ -135,7 +136,20 @@ class Inspector {
   }
 
   async exportSearchedSignatureTable():Promise<boolean> {
+    const workbook = new Excel.Workbook();
+    const totalWorkSheet = workbook.addWorksheet('total');
+
+    const countriesColumns = [
+      { key: 'title', header: 'Title' },
+      { key: 'publicKey', header: 'Public_key' },
+      { key: 'associatedAddress', header: 'Associated_address' },
+      { key: 'signature', header: 'signature' },
+    ];
+
+    totalWorkSheet.columns = countriesColumns
     
+    // const worksheet = workbook.addWorksheet('Countries List');
+
     return true
   }
 }

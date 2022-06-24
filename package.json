@@ -29,6 +29,7 @@
   "dependencies": {
     "@solana/web3.js": "^1.44.2",
     "@types/pluralize": "^0.0.29",
+    "exceljs": "^4.3.0",
     "pluralize": "^8.0.0"
   }
 }

@@ -16,7 +16,10 @@ async function main() {
   await obj.pushSearchTable('R&D', 'Bci48Ru2ngPsKrdUJojezJApgPTGLhcGt5YmTCwqS5fs');
   await obj.pushSearchTable('Advisor', '6wVKWNrgpzZNdccuHFhDmBCZm31JFUVVXFH42FZDU4wS');
   await obj.pushSearchTable('Reserve', '261Snk2C3hQDFxo51Xu8XexhsiUkULgxzsmnvbQNWTw2');
-  console.log(obj.searchTable);
+  
+  const res = await obj.getAllSignatures();
+
+  
 }
 
 main();

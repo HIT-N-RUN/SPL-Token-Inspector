@@ -1,3 +1,5 @@
+import { PublicKey } from "@solana/web3.js";
+
 const web3 = require('@solana/web3.js');
 
 interface Wallet {
@@ -6,8 +8,34 @@ interface Wallet {
   associatedAddress: string
 }
 
+interface signatureQuery {
+  limit: number,
+  before: string,
+  until: string,
+  commitment: string
+}
+
+interface signature {
+  blockTime: number,
+  confirmationStatus: string,
+  err: string|null,
+  memo: string|null,
+  signature: string,
+  slot: number
+}
+
+interface searchedSignatureTable extends Wallet {
+  signatures: Array<signature>
+}
+
 class CONSTANT {
   static CLUSTER_URL: string = 'https://api.mainnet-beta.solana.com';
+}
+
+class Util {
+  static sleep(ms:number) {
+    return new Promise((r) => setTimeout(r, ms));
+  }
 }
 
 class Inspector {
@@ -15,6 +43,8 @@ class Inspector {
   tokenMintAddress:string;
   tokenMintPublicKey:any; // public Key
   searchTable:Set<Wallet>;
+  fetchLimit:number;
+  fetchDelay:number;
 
   constructor(
     cluster_url:string = CONSTANT.CLUSTER_URL, 
@@ -23,7 +53,9 @@ class Inspector {
     this.connection = new web3.Connection(cluster_url);
     this.tokenMintAddress = tokenMintAddress;
     this.tokenMintPublicKey = new web3.PublicKey(this.tokenMintAddress);
-    this.searchTable = new Set();
+    this.searchTable = new Set<Wallet>();
+    this.fetchLimit = 1000;
+    this.fetchDelay = 2000;
   }
 
   async getAssociatedAddress(publicKey:string) : Promise<string> {
@@ -55,7 +87,57 @@ class Inspector {
     this.searchTable.add(n_wallet);
   }
 
+  getPublicKey(publicKey:string): PublicKey {
+    return new PublicKey(publicKey);
+  }
+
+  async getSignatures(pubKey:PublicKey, limit:number = 1000, before:string ='', until:string|undefined='', commitment:string='finalized'): Promise<Array<signature>> {
+    var query:signatureQuery = <signatureQuery>{};
+
+    if (limit) { query.limit = limit; }
+    if (before) { query.before = before; }
+    if (until) { query.until = until; }
+    if (commitment) { query.commitment = commitment; }
+    
+    const signatures = await this.connection.getConfirmedSignaturesForAddress2(pubKey, query);
+
+    return signatures;
+  }
+
+  async getAllSignatures():Promise<Array<searchedSignatureTable>> {
+    const result:Array<searchedSignatureTable> = [];
+    
+    for (var wallet of Array.from(this.searchTable.values())) {
+      const searchedSignatureTable:searchedSignatureTable = <searchedSignatureTable>wallet;
+      searchedSignatureTable.signatures = [];
+
+      const pubKey:PublicKey = this.getPublicKey(searchedSignatureTable.associatedAddress);
+      var temp_res:Array<string> = [];
+
+      do {
+        const res:Array<signature> = await this.getSignatures(
+          pubKey,
+          this.fetchLimit,
+          temp_res ? temp_res[temp_res.length - 1] : ''
+        )
   
+        const signatures = res.map((ele) => ele.signature);
+        temp_res = signatures;
+  
+        searchedSignatureTable.signatures.push(...res);
+        
+        await Util.sleep(this.fetchDelay);
+      } while (temp_res.length);
+      result.push(searchedSignatureTable);
+    }
+    
+    return result;
+  }
+
+  async exportSearchedSignatureTable():Promise<boolean> {
+    
+    return true
+  }
 }
 
 export { Inspector };

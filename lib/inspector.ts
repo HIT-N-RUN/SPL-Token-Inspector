@@ -1,9 +1,9 @@
 const web3 = require('@solana/web3.js');
 
 interface Wallet {
-  title:String,
-  publicKey: String,
-  associatedAddress: String
+  title:string,
+  publicKey: string,
+  associatedAddress: string
 }
 
 class CONSTANT {
@@ -26,20 +26,36 @@ class Inspector {
     this.searchTable = new Set();
   }
 
-  async pushSearchTable(title:string, publicKey:string, associatedAddress:string = '') {
-    const n_wallet:Wallet = {
-      title,
-      publicKey,
-      associatedAddress: associatedAddress ? 
-        associatedAddress 
-        : await this.connection.getTokenAccountsByOwner(
-          new web3.PublicKey(publicKey, {
-            mint: this.tokenMintPublicKey
-          })
-        )
-    }
-    console.log(n_wallet);
+  async getAssociatedAddress(publicKey:string) : Promise<string> {
+    return await this.connection.getTokenAccountsByOwner(
+      new web3.PublicKey(publicKey), {
+        mint: this.tokenMintPublicKey
+      }
+    );
   }
+
+  async getstringOfAssociatedAddress(publicKey:string) : Promise<string> {
+    const associatedAddress:any = await this.getAssociatedAddress(publicKey);
+    
+    return associatedAddress.value[0].pubkey.toString();
+  }
+
+  getWallet(title:string, publicKey:string, associatedAddress:string): Wallet {
+    const wallet:Wallet = {
+      title, publicKey, associatedAddress
+    }
+    return wallet
+  }
+
+  async pushSearchTable(title:string, publicKey:string, associatedAddress:string = '') {
+    associatedAddress = associatedAddress ? associatedAddress : await this.getstringOfAssociatedAddress(publicKey);
+
+    const n_wallet:Wallet = this.getWallet(title, publicKey, associatedAddress);
+    
+    this.searchTable.add(n_wallet);
+  }
+
+  
 }
 
 export { Inspector };

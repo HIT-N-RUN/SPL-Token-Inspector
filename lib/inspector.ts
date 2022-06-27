@@ -1,5 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
-import Excel from 'exceljs';
+import { Util } from './util';
 
 const web3 = require('@solana/web3.js');
 
@@ -29,14 +29,19 @@ interface searchedSignatureTable extends Wallet {
   signatures: Array<signature>
 }
 
-class CONSTANT {
-  static CLUSTER_URL: string = 'https://api.mainnet-beta.solana.com';
+interface parsedSignature {
+  source: string,
+  destination: string,
+  uiAmount: string,
+  signature: string
 }
 
-class Util {
-  static sleep(ms:number) {
-    return new Promise((r) => setTimeout(r, ms));
-  }
+interface parsedSignatureTable extends searchedSignatureTable {
+  parsedSignatures: Array<parsedSignature>
+}
+
+class CONSTANT {
+  static CLUSTER_URL: string = 'https://api.mainnet-beta.solana.com';
 }
 
 class Inspector {
@@ -135,23 +140,65 @@ class Inspector {
     return result;
   }
 
-  async exportSearchedSignatureTable():Promise<boolean> {
-    const workbook = new Excel.Workbook();
-    const totalWorkSheet = workbook.addWorksheet('total');
-
-    const countriesColumns = [
-      { key: 'title', header: 'Title' },
-      { key: 'publicKey', header: 'Public_key' },
-      { key: 'associatedAddress', header: 'Associated_address' },
-      { key: 'signature', header: 'signature' },
-    ];
-
-    totalWorkSheet.columns = countriesColumns
+  async parseSignatures(searchedSignatures: Array<searchedSignatureTable>):Promise<Array<parsedSignatureTable>> {
+    const unique_signatures = new Set();
     
-    // const worksheet = workbook.addWorksheet('Countries List');
+    console.log(searchedSignatures);
+    // searchedSignatures.map((searchedSignature) => {
+    //   searchedSignature.signatures.map((signature) => {
+    //     unique_signatures.add(signature);
+    //   })
+    // })
+    
 
-    return true
+    console.log(unique_signatures);
+    
+    return [];
+  }
+
+  async getAllSignaturesFromPublicKey(publicKey:string):Promise<Array<signature>> {
+    const pubKey = this.getPublicKey(publicKey);
+    const result = <Array<signature>>[];
+    var temp_res = <any>[];
+
+    do {
+      const res:Array<signature> = await this.getSignatures(
+        pubKey,
+        this.fetchLimit,
+        temp_res ? temp_res[temp_res.length - 1] : ''
+      )
+
+      const signatures = res.map((ele) => ele.signature);
+      temp_res = signatures;
+
+      result.push(...res);
+      
+      await Util.sleep(this.fetchDelay);
+    } while (temp_res.length);
+
+    return result;
+  }
+
+  async getAllSignaturesFromName(publicKeyName:string):Promise<Array<signature>> {
+    var targetWallet:Wallet = <Wallet>{};
+
+    
+    for (var wallet of Array.from(this.searchTable.values())) {
+      if (wallet.title === publicKeyName) {
+        targetWallet = wallet;
+      }
+    }
+
+    const publicKey = targetWallet.publicKey;
+
+    const res = await this.getAllSignaturesFromPublicKey(publicKey);
+
+    return res;
   }
 }
 
 export { Inspector };
+
+export {
+  Wallet, signature, signatureQuery, searchedSignatureTable
+}

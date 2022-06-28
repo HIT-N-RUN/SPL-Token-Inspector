@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "SPL-Token-Inspector",
   "main": "index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "test": "mocha --reporter spec",
     "build": "tsc",
-    "start": "tsc && node ./dist/index.js"
+    "start": "node ./index.js"
   },
   "repository": {
     "type": "git",
@@ -21,15 +21,11 @@
   },
   "homepage": "https://github.com/HIT-N-RUN/SPL-Token-Inspector#readme",
   "devDependencies": {
-    "@types/node-fetch": "^2.6.2",
     "chai": "^4.3.6",
-    "mocha": "^10.0.0",
-    "typescript": "^4.7.4"
+    "mocha": "^10.0.0"
   },
   "dependencies": {
     "@solana/web3.js": "^1.44.2",
-    "@types/pluralize": "^0.0.29",
-    "exceljs": "^4.3.0",
-    "pluralize": "^8.0.0"
+    "exceljs": "^4.3.0"
   }
 }
